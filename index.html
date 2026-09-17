@@ -1,0 +1,1303 @@
+<title>Bond Builder</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#EAEFF0;
+    --surface:#FFFFFF;
+    --surface-2:#F3F6F6;
+    --ink:#172227;
+    --muted:#58686F;
+    --line:#D3DBDD;
+    --accent:#106A5D;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#E1F0EC;
+    --danger:#A82A20;
+    --danger-soft:#FBEAE8;
+    --success:#1F6B3D;
+    --success-soft:#E6F3EA;
+    --lcd-bg:#0F211D;
+    --lcd-fg:#5FE0C0;
+    --shadow:0 1px 2px rgba(20,30,32,.08), 0 1px 1px rgba(20,30,32,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0D1315;
+      --surface:#161F22;
+      --surface-2:#121A1C;
+      --ink:#E7EDED;
+      --muted:#93A4A7;
+      --line:#263335;
+      --accent:#54D6C0;
+      --accent-ink:#08201B;
+      --accent-soft:#123530;
+      --danger:#FF9086;
+      --danger-soft:#341814;
+      --success:#7CDBA3;
+      --success-soft:#0F3320;
+      --lcd-bg:#081512;
+      --lcd-fg:#6CF0CC;
+      --shadow:0 1px 2px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1315;
+    --surface:#161F22;
+    --surface-2:#121A1C;
+    --ink:#E7EDED;
+    --muted:#93A4A7;
+    --line:#263335;
+    --accent:#54D6C0;
+    --accent-ink:#08201B;
+    --accent-soft:#123530;
+    --danger:#FF9086;
+    --danger-soft:#341814;
+    --success:#7CDBA3;
+    --success-soft:#0F3320;
+    --lcd-bg:#081512;
+    --lcd-fg:#6CF0CC;
+    --shadow:0 1px 2px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", system-ui, sans-serif;
+    padding:28px 16px 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:20px;}
+
+  /* ---------- header ---------- */
+  .header{
+    display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+    padding-bottom:16px;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 6px;
+  }
+  h1{
+    font-family:"Fraunces", Georgia, serif;
+    font-weight:600;
+    font-size:clamp(28px,5vw,40px);
+    margin:0;
+    text-wrap:balance;
+    letter-spacing:-.01em;
+  }
+  .subhead{
+    font-size:13.5px;color:var(--muted);margin:6px 0 0;max-width:48ch;
+  }
+
+  .mode-tabs{
+    display:inline-flex;border:1px solid var(--line);border-radius:999px;
+    padding:3px;gap:3px;background:var(--surface);flex:none;
+  }
+  .mode-tab{
+    border:none;background:transparent;cursor:pointer;
+    font-family:"IBM Plex Sans", sans-serif;font-weight:600;font-size:12.5px;
+    padding:7px 15px;border-radius:999px;color:var(--muted);
+    transition:background .12s ease, color .12s ease;
+  }
+  .mode-tab.active{background:var(--accent);color:var(--accent-ink);}
+
+  /* ---------- readouts ---------- */
+  .readouts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .readout{
+    background:var(--lcd-bg);
+    border-radius:8px;
+    padding:10px 12px;
+    display:flex;flex-direction:column;gap:2px;
+    box-shadow:var(--shadow);
+  }
+  .readout-label{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:#8FA9A2;
+  }
+  .readout-value{
+    font-family:"IBM Plex Mono", monospace;
+    font-variant-numeric:tabular-nums;
+    font-size:22px;font-weight:600;
+    color:var(--lcd-fg);
+  }
+  .readout-value.small{font-size:17px;}
+
+  /* ---------- docket ---------- */
+  .docket{
+    position:relative;
+    border:1px dashed var(--line);
+    border-radius:10px;
+    background:var(--surface);
+    padding:18px 20px;
+  }
+  .docket-top{
+    display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;
+  }
+  .docket-label{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  }
+  .docket-name{
+    font-family:"Fraunces", Georgia, serif;
+    font-weight:500;
+    font-size:clamp(22px,3.4vw,28px);
+    margin:6px 0 0;
+    text-wrap:balance;
+  }
+  .docket-formula{
+    display:inline-block;margin-top:8px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:14px;font-weight:600;
+    background:var(--accent-soft);color:var(--accent);
+    padding:3px 9px;border-radius:5px;
+  }
+  .docket-hint{margin:10px 0 0;font-size:12.5px;color:var(--muted);}
+
+  .banner{
+    border-radius:10px;
+    padding:18px 20px;
+    border:1px solid var(--line);
+  }
+  .banner.win{background:var(--success-soft);border-color:var(--success);}
+  .banner h2{
+    font-family:"Fraunces", Georgia, serif;font-weight:600;
+    margin:0 0 6px;font-size:22px;
+  }
+  .banner p{margin:0 0 12px;font-size:13.5px;color:var(--ink);}
+
+  /* ---------- chamber ---------- */
+  .chamber-shell{
+    position:relative;
+    overflow:hidden;
+    border:1px dashed var(--line);
+    border-radius:10px;
+    background:var(--surface-2);
+    padding:16px;
+  }
+  @keyframes flashSuccess{
+    0%{box-shadow:inset 0 0 0 0 var(--success);}
+    35%{box-shadow:inset 0 0 0 3px var(--success);}
+    100%{box-shadow:inset 0 0 0 0 transparent;}
+  }
+  .chamber-shell.flash-success{animation:flashSuccess .7s ease;}
+  .confetti{
+    position:absolute;
+    width:7px;height:7px;border-radius:2px;
+    left:50%;top:38%;
+    pointer-events:none;
+    animation:confettiBurst .8s ease-out forwards;
+  }
+  @keyframes confettiBurst{
+    0%{transform:translate(-50%,-50%) translate(0,0) rotate(0deg);opacity:1;}
+    100%{transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0;}
+  }
+  .chamber-label{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 10px;
+  }
+  .chamber{
+    min-height:96px;
+    display:flex;flex-wrap:wrap;gap:14px 10px;align-content:flex-start;
+  }
+  .chamber-empty{
+    color:var(--muted);font-size:13px;align-self:center;padding:20px 4px;
+  }
+  .atom{
+    font-family:"IBM Plex Sans", sans-serif;
+    border:none;
+    width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:15px;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+    transform:scale(1);
+    transition:transform .12s ease, box-shadow .12s ease;
+    animation:pop .16s ease;
+  }
+  .atom:hover{transform:translateY(-2px);}
+  .atom.selected{
+    transform:translateY(-3px) scale(1.06);
+    box-shadow:0 0 0 3px var(--accent), var(--shadow);
+  }
+  @keyframes pop{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .atom.leaving{animation:leave .18s ease forwards;}
+  @keyframes leave{to{transform:scale(0);opacity:0;}}
+
+  .c-atom-wrap{position:relative;width:46px;height:46px;}
+  .c-atom-badge{
+    position:absolute;bottom:-6px;right:-6px;
+    background:var(--surface);color:var(--ink);
+    font-family:"IBM Plex Mono",monospace;font-size:9px;font-weight:600;
+    border-radius:8px;padding:1px 4px;box-shadow:var(--shadow);line-height:1.3;
+    pointer-events:none;
+  }
+  .c-atom-remove{
+    position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;
+    border:none;background:var(--surface);color:var(--muted);font-size:11px;line-height:1;
+    cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;padding:0;
+  }
+  .c-atom-remove:hover{color:var(--danger);}
+
+  .molecule-reveal{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:10px 0 4px;width:100%;
+  }
+  .molecule-reveal svg{width:170px;height:auto;max-width:100%;}
+  .molecule-reveal .reveal-name{
+    font-family:"Fraunces", Georgia, serif;font-weight:600;font-size:16px;color:var(--ink);
+  }
+  .molecule-reveal .reveal-formula{
+    font-family:"IBM Plex Mono", monospace;font-size:12.5px;font-weight:600;
+    background:var(--accent-soft);color:var(--accent);padding:2px 9px;border-radius:5px;
+  }
+
+  .bondlist{display:flex;flex-wrap:wrap;gap:8px;min-height:22px;align-items:center;}
+  .bondlist-empty{color:var(--muted);font-size:12.5px;}
+  .bond-chip{
+    display:flex;align-items:center;gap:5px;
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;
+    padding:4px 6px 4px 4px;box-shadow:var(--shadow);
+  }
+  .bond-chip .sym-badge{
+    width:20px;height:20px;border-radius:50%;flex:none;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"IBM Plex Sans",sans-serif;font-weight:700;font-size:9.5px;
+  }
+  .bond-chip .order-glyph{
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:15px;
+    color:var(--muted);min-width:12px;text-align:center;
+  }
+  .bond-chip button{
+    border:none;background:transparent;cursor:pointer;
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
+    border-radius:5px;padding:2px 6px;
+  }
+  .bond-chip button.plus{color:var(--accent);}
+  .bond-chip button.plus:disabled{opacity:.3;cursor:not-allowed;}
+  .bond-chip button.remove{color:var(--muted);}
+  .bond-chip button.remove:hover{color:var(--danger);}
+
+  .chamber-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+
+  button.btn{
+    font-family:"IBM Plex Sans", sans-serif;
+    font-weight:600;font-size:13.5px;
+    border-radius:7px;
+    padding:9px 16px;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:opacity .12s ease, background .12s ease;
+  }
+  button.btn:disabled{opacity:.4;cursor:not-allowed;}
+  button.btn.primary{background:var(--accent);color:var(--accent-ink);}
+  button.btn.primary:not(:disabled):hover{opacity:.88;}
+  button.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  button.btn.ghost:not(:disabled):hover{background:var(--surface);}
+
+  .feedback{
+    margin-top:12px;font-size:13.5px;
+    padding:9px 12px;border-radius:7px;
+    border-left:3px solid var(--line);
+    background:var(--surface);
+    color:var(--muted);
+    min-height:16px;
+  }
+  .feedback.error{border-color:var(--danger);background:var(--danger-soft);color:var(--danger);}
+  .feedback.success{border-color:var(--success);background:var(--success-soft);color:var(--success);}
+  .feedback.neutral{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+  .feedback.celebrate{
+    border-color:var(--success);background:var(--success-soft);color:var(--success);
+    font-weight:600;font-size:14.5px;
+  }
+
+  /* ---------- palette ---------- */
+  .palette-section{margin-top:2px;}
+  .palette-head{
+    display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;
+    margin-bottom:10px;
+  }
+  .palette-scroll{overflow-x:auto;padding-bottom:6px;}
+  .palette{
+    display:grid;
+    grid-template-columns:repeat(18, 36px);
+    grid-auto-rows:36px;
+    gap:4px;
+    width:max-content;
+  }
+  .cell{
+    position:relative;
+    border:none;border-radius:5px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-family:"IBM Plex Sans", sans-serif;
+    box-shadow:var(--shadow);
+    transition:transform .1s ease, opacity .1s ease;
+  }
+  .cell:hover:not(:disabled){transform:translateY(-2px);}
+  .cell:disabled{opacity:.35;cursor:not-allowed;}
+  .cell .z{position:absolute;top:2px;left:3px;font-family:"IBM Plex Mono",monospace;font-size:7px;opacity:.75;}
+  .cell .sym{font-weight:700;font-size:13px;line-height:1;}
+  .cell .charge{font-family:"IBM Plex Mono",monospace;font-size:7px;position:absolute;bottom:2px;right:3px;opacity:.9;}
+  .palette-caption{margin:10px 2px 0;font-size:11.5px;color:var(--muted);max-width:60ch;}
+
+  @media (prefers-reduced-motion: reduce){
+    .atom, .cell, button.btn, .chamber-shell.flash-success{animation:none !important;transition:none !important;}
+  }
+
+  @media (max-width:560px){
+    .readouts{grid-template-columns:1fr 1fr 1fr;}
+    .readout-value{font-size:18px;}
+    .header{align-items:flex-start;}
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="header">
+    <div>
+      <p class="eyebrow" id="eyebrow">Prototype &middot; Ionic Bonding &middot; H&ndash;Ca</p>
+      <h1>Bond Builder</h1>
+      <p class="subhead" id="subhead">Spend moves pulling elements onto the bench, then bond a cation and anion whose charges cancel in the compound's real ratio.</p>
+    </div>
+    <div class="mode-tabs" role="tablist">
+      <button class="mode-tab active" id="tab-ionic" role="tab" aria-selected="true">Ionic</button>
+      <button class="mode-tab" id="tab-covalent" role="tab" aria-selected="false">Covalent</button>
+    </div>
+  </div>
+
+  <section id="mode-ionic">
+
+    <div class="readouts">
+      <div class="readout">
+        <span class="readout-label">Moves left</span>
+        <span class="readout-value" id="read-moves">--</span>
+      </div>
+      <div class="readout">
+        <span class="readout-label">Cleared</span>
+        <span class="readout-value" id="read-score">--</span>
+      </div>
+      <div class="readout">
+        <span class="readout-label">Selection charge</span>
+        <span class="readout-value small" id="read-charge">--</span>
+      </div>
+    </div>
+
+    <div id="docket-slot"></div>
+
+    <div class="chamber-shell" id="i-shell">
+      <p class="chamber-label">Reaction bench</p>
+      <div class="chamber" id="chamber"></div>
+      <div class="chamber-actions">
+        <button class="btn primary" id="btn-bond">Bond selected</button>
+        <button class="btn ghost" id="btn-select-all">Select all</button>
+        <button class="btn ghost" id="btn-discard">Discard selected</button>
+        <button class="btn ghost" id="btn-reset">Reset</button>
+      </div>
+      <div class="feedback neutral" id="feedback">Pick a cation and an anion from the periodic table below — each pull costs one move.</div>
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-head">
+        <p class="chamber-label" style="margin:0;">Element supply &mdash; hydrogen to calcium</p>
+      </div>
+      <div class="palette-scroll">
+        <div class="palette" id="palette"></div>
+      </div>
+      <p class="palette-caption" id="palette-caption"></p>
+    </div>
+
+  </section>
+
+  <section id="mode-covalent" hidden>
+
+    <div class="readouts">
+      <div class="readout">
+        <span class="readout-label">Moves left</span>
+        <span class="readout-value" id="c-read-moves">--</span>
+      </div>
+      <div class="readout">
+        <span class="readout-label">Cleared</span>
+        <span class="readout-value" id="c-read-score">--</span>
+      </div>
+      <div class="readout">
+        <span class="readout-label">Bonds formed</span>
+        <span class="readout-value small" id="c-read-bonds">--</span>
+      </div>
+    </div>
+
+    <div id="c-docket-slot"></div>
+
+    <div class="chamber-shell" id="c-shell">
+      <p class="chamber-label">Reaction bench</p>
+      <div class="chamber" id="c-chamber"></div>
+      <p class="chamber-label" style="margin-top:16px;">Bonds formed</p>
+      <div class="bondlist" id="c-bondlist"></div>
+      <div class="chamber-actions">
+        <button class="btn primary" id="c-btn-assemble">Assemble molecule</button>
+        <button class="btn ghost" id="c-btn-discard">Clear bench</button>
+        <button class="btn ghost" id="c-btn-reset">Reset</button>
+      </div>
+      <div class="feedback neutral" id="c-feedback">Click two atoms on the bench to start a bond — the first shared pair is free.</div>
+    </div>
+
+    <div class="palette-section">
+      <div class="palette-head">
+        <p class="chamber-label" style="margin:0;">Element supply &mdash; H, C, N, O, Cl</p>
+      </div>
+      <div class="palette-scroll">
+        <div class="palette" id="c-palette"></div>
+      </div>
+      <p class="palette-caption" id="c-palette-caption"></p>
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+(function(){
+  /* =========================================================
+     Shared: mode switching
+     ========================================================= */
+  let currentMode = "ionic";
+
+  function setMode(mode){
+    currentMode = mode;
+    document.getElementById("tab-ionic").classList.toggle("active", mode==="ionic");
+    document.getElementById("tab-covalent").classList.toggle("active", mode==="covalent");
+    document.getElementById("tab-ionic").setAttribute("aria-selected", mode==="ionic");
+    document.getElementById("tab-covalent").setAttribute("aria-selected", mode==="covalent");
+    document.getElementById("mode-ionic").hidden = mode!=="ionic";
+    document.getElementById("mode-covalent").hidden = mode!=="covalent";
+    document.getElementById("eyebrow").textContent = mode==="ionic"
+      ? "Prototype · Ionic Bonding · H–Ca"
+      : "Prototype · Covalent Bonding · H, C, N, O, Cl";
+    document.getElementById("subhead").textContent = mode==="ionic"
+      ? "Spend moves pulling elements onto the bench, then bond a cation and anion whose charges cancel in the compound's real ratio."
+      : "Spend moves pulling elements onto the bench, then click pairs of atoms to bond them — a single shared pair is free, upgrading to double or triple costs a move.";
+  }
+
+  /* =========================================================
+     Ionic mode
+     ========================================================= */
+  const ELEMENTS = {
+    H:  {name:"Hydrogen",   z:1,  period:1, group:1,  charge:null, bg:"#F3F1EC", fg:"#20282A"},
+    He: {name:"Helium",     z:2,  period:1, group:18, charge:null, bg:"#BEE7EA", fg:"#173036"},
+    Li: {name:"Lithium",    z:3,  period:2, group:1,  charge:1,    bg:"#C8A4DE", fg:"#2B1338"},
+    Be: {name:"Beryllium",  z:4,  period:2, group:2,  charge:2,    bg:"#8FCB9C", fg:"#123018"},
+    B:  {name:"Boron",      z:5,  period:2, group:13, charge:null, bg:"#E8B6A2", fg:"#3A1B12"},
+    C:  {name:"Carbon",     z:6,  period:2, group:14, charge:null, bg:"#2B2B2B", fg:"#F1F1F1"},
+    N:  {name:"Nitrogen",   z:7,  period:2, group:15, charge:-3,   bg:"#5C84E0", fg:"#0B1740"},
+    O:  {name:"Oxygen",     z:8,  period:2, group:16, charge:-2,   bg:"#E14B3C", fg:"#3A0A05"},
+    F:  {name:"Fluorine",   z:9,  period:2, group:17, charge:-1,   bg:"#A7DFAE", fg:"#123018"},
+    Ne: {name:"Neon",       z:10, period:2, group:18, charge:null, bg:"#BEE7EA", fg:"#173036"},
+    Na: {name:"Sodium",     z:11, period:3, group:1,  charge:1,    bg:"#AE7ADA", fg:"#1E0E2B"},
+    Mg: {name:"Magnesium",  z:12, period:3, group:2,  charge:2,    bg:"#4E9E64", fg:"#0C2011"},
+    Al: {name:"Aluminium",  z:13, period:3, group:13, charge:3,    bg:"#C7CBD1", fg:"#20242B"},
+    Si: {name:"Silicon",    z:14, period:3, group:14, charge:null, bg:"#DBC79E", fg:"#332714"},
+    P:  {name:"Phosphorus", z:15, period:3, group:15, charge:-3,   bg:"#F2932E", fg:"#3A2000"},
+    S:  {name:"Sulfur",     z:16, period:3, group:16, charge:-2,   bg:"#E9D23C", fg:"#332C05"},
+    Cl: {name:"Chlorine",   z:17, period:3, group:17, charge:-1,   bg:"#4FAE55", fg:"#0C2210"},
+    Ar: {name:"Argon",      z:18, period:3, group:18, charge:null, bg:"#BEE7EA", fg:"#173036"},
+    K:  {name:"Potassium",  z:19, period:4, group:1,  charge:1,    bg:"#8E57CB", fg:"#F2E9FA"},
+    Ca: {name:"Calcium",    z:20, period:4, group:2,  charge:2,    bg:"#3F8455", fg:"#EAF5EC"},
+  };
+  const ORDER = ["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca"];
+
+  const CHALLENGES = [
+    {name:"Sodium Chloride",    formula:"NaCl",  elements:{Na:1, Cl:1}},
+    {name:"Magnesium Chloride", formula:"MgCl₂", elements:{Mg:1, Cl:2}},
+    {name:"Calcium Fluoride",   formula:"CaF₂",  elements:{Ca:1, F:2}},
+    {name:"Potassium Sulfide",  formula:"K₂S",   elements:{K:2, S:1}},
+    {name:"Aluminium Oxide",    formula:"Al₂O₃", elements:{Al:2, O:3}},
+    {name:"Magnesium Nitride",  formula:"Mg₃N₂", elements:{Mg:3, N:2}},
+  ];
+  const TOTAL_MOVES = 31;
+
+  let state, nextId;
+
+  function freshState(){
+    nextId = 1;
+    return {
+      movesLeft: TOTAL_MOVES,
+      score: 0,
+      challengeIndex: 0,
+      workspace: [],
+      selected: new Set(),
+      won: false,
+    };
+  }
+
+  function formulaVisible(){ return state.challengeIndex === 0; }
+  function chargesVisible(){ return state.challengeIndex < 3; }
+
+  function gcd(a,b){ return b===0 ? a : gcd(b, a%b); }
+
+  function fmtCharge(c){
+    if(c===null) return "";
+    return (c>0? "+":"") + c;
+  }
+
+  function setFeedback(kind, msg){
+    const el = document.getElementById("feedback");
+    el.className = "feedback " + kind;
+    el.textContent = msg;
+  }
+
+  function spawnAtom(symbol){
+    if(state.won) return;
+    if(state.movesLeft<=0){ setFeedback("error","No moves left to pull new elements — bond what's already on the bench."); return; }
+    state.movesLeft--;
+    state.workspace.push({id: nextId++, symbol});
+    render();
+  }
+
+  function toggleSelect(id){
+    if(state.selected.has(id)) state.selected.delete(id);
+    else state.selected.add(id);
+    render();
+  }
+
+  function selectAll(){
+    if(state.workspace.length===0) return;
+    state.workspace.forEach(a=> state.selected.add(a.id));
+    render();
+  }
+
+  function discardSelected(){
+    if(state.selected.size===0) return;
+    state.workspace = state.workspace.filter(a=>!state.selected.has(a.id));
+    state.selected.clear();
+    setFeedback("neutral","Bench cleared of that selection — no move cost to discard.");
+    render();
+  }
+
+  function attemptBond(){
+    if(state.selected.size===0){ setFeedback("neutral","Select some atoms from the bench first."); return; }
+    const atoms = state.workspace.filter(a=>state.selected.has(a.id));
+    const nonIonic = atoms.find(a=>ELEMENTS[a.symbol].charge===null);
+    if(nonIonic){
+      setFeedback("error", ELEMENTS[nonIonic.symbol].name + " doesn't form a simple ion — it can't take part in an ionic bond.");
+      return;
+    }
+    const counts = {};
+    atoms.forEach(a=> counts[a.symbol] = (counts[a.symbol]||0) + 1);
+    const symbols = Object.keys(counts);
+    if(symbols.length < 2){
+      setFeedback("error","An ionic compound needs a cation and an anion — you've only selected one element.");
+      return;
+    }
+    if(symbols.length > 2){
+      setFeedback("error","Select atoms of exactly two elements — one cation, one anion.");
+      return;
+    }
+    const netCharge = symbols.reduce((sum,s)=> sum + counts[s]*ELEMENTS[s].charge, 0);
+    if(netCharge !== 0){
+      setFeedback("error","Net charge is " + fmtCharge(netCharge) + " — adjust how many of each ion you've selected until it cancels to zero.");
+      return;
+    }
+    const g = gcd(counts[symbols[0]], counts[symbols[1]]);
+    const reduced = {};
+    reduced[symbols[0]] = counts[symbols[0]]/g;
+    reduced[symbols[1]] = counts[symbols[1]]/g;
+
+    const target = CHALLENGES[state.challengeIndex].elements;
+    const targetSymbols = Object.keys(target);
+    const sameElements = targetSymbols.every(s=>reduced[s]!==undefined) && Object.keys(reduced).every(s=>target[s]!==undefined);
+    const sameRatio = sameElements && targetSymbols.every(s=>reduced[s]===target[s]);
+
+    if(sameElements && sameRatio){
+      const ids = atoms.map(a=>a.id);
+      ids.forEach(id=>{
+        const tile = document.querySelector('[data-atom-id="'+id+'"]');
+        if(tile) tile.classList.add("leaving");
+      });
+      const compoundName = CHALLENGES[state.challengeIndex].name;
+      setTimeout(()=>{
+        state.workspace = state.workspace.filter(a=>!ids.includes(a.id));
+        state.selected.clear();
+        state.score++;
+        render();
+        celebrate(compoundName);
+      }, 160);
+      return;
+    }
+    if(sameElements && !sameRatio){
+      setFeedback("error","Charges balance, but that's the wrong ratio for " + CHALLENGES[state.challengeIndex].name + " — check the formula and try again.");
+      return;
+    }
+    setFeedback("neutral","That combination is charge-balanced, just not what's on today's docket (" + CHALLENGES[state.challengeIndex].name + "). Try the right elements.");
+  }
+
+  function spawnConfetti(shellId){
+    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const shell = document.getElementById(shellId);
+    const colors = ["#5FE0C0","#F2932E","#E14B3C","#5C84E0","#E9D23C"];
+    for(let i=0;i<10;i++){
+      const p = document.createElement("span");
+      p.className = "confetti";
+      const angle = (Math.PI*2) * (i/10) + Math.random()*0.4;
+      const dist = 46 + Math.random()*30;
+      p.style.setProperty("--dx", Math.cos(angle)*dist + "px");
+      p.style.setProperty("--dy", Math.sin(angle)*dist + "px");
+      p.style.setProperty("--rot", (Math.random()*240-120) + "deg");
+      p.style.background = colors[i % colors.length];
+      shell.appendChild(p);
+      setTimeout(()=> p.remove(), 850);
+    }
+  }
+
+  function celebrate(compoundName){
+    const shell = document.getElementById("i-shell");
+    shell.classList.add("flash-success");
+    setTimeout(()=> shell.classList.remove("flash-success"), 700);
+    setFeedback("celebrate", "✓ " + compoundName + " bonded — next request coming up.");
+    spawnConfetti("i-shell");
+    setTimeout(()=>{
+      state.challengeIndex++;
+      if(state.challengeIndex >= CHALLENGES.length){
+        state.won = true;
+      }
+      render();
+      if(!state.won) setFeedback("neutral","Pick a cation and an anion from the periodic table below — each pull costs one move.");
+    }, 1000);
+  }
+
+  function resetGame(){
+    state = freshState();
+    setFeedback("neutral","Bench reset. Pick a cation and an anion from the periodic table below — each pull costs one move.");
+    render();
+  }
+
+  function renderDocket(){
+    const slot = document.getElementById("docket-slot");
+    if(state.won){
+      slot.innerHTML =
+        '<div class="banner win">' +
+          '<h2>Docket cleared</h2>' +
+          '<p>All ' + CHALLENGES.length + ' compounds bonded, with ' + state.movesLeft + ' of ' + TOTAL_MOVES + ' moves left over.</p>' +
+          '<button class="btn primary" id="btn-play-again">Run it again</button>' +
+        '</div>';
+      document.getElementById("btn-play-again").addEventListener("click", resetGame);
+      return;
+    }
+    const c = CHALLENGES[state.challengeIndex];
+    const hint = formulaVisible()
+      ? "Formula's given for this first one — after this you'll work from the name alone."
+      : (chargesVisible()
+        ? "Build it from ions balanced to zero net charge, in this compound's real ratio."
+        : "Ion charges are hidden now too — recall them from each element's group on the table below.");
+    slot.innerHTML =
+      '<div class="docket">' +
+        '<div class="docket-top">' +
+          '<span class="docket-label">Request No. ' + (state.challengeIndex+1) + ' / ' + CHALLENGES.length + '</span>' +
+        '</div>' +
+        '<p class="docket-name">' + c.name + '</p>' +
+        (formulaVisible() ? '<span class="docket-formula">' + c.formula + '</span>' : '') +
+        '<p class="docket-hint">' + hint + '</p>' +
+      '</div>';
+  }
+
+  function renderReadouts(){
+    document.getElementById("read-moves").textContent = state.movesLeft + " / " + TOTAL_MOVES;
+    document.getElementById("read-score").textContent = state.score + " / " + CHALLENGES.length;
+    const atoms = state.workspace.filter(a=>state.selected.has(a.id));
+    if(atoms.length===0){
+      document.getElementById("read-charge").textContent = "—";
+    } else {
+      const sum = atoms.reduce((s,a)=> s + (ELEMENTS[a.symbol].charge||0), 0);
+      document.getElementById("read-charge").textContent = fmtCharge(sum);
+    }
+  }
+
+  function renderChamber(){
+    const chamber = document.getElementById("chamber");
+    chamber.innerHTML = "";
+    if(state.workspace.length===0){
+      const p = document.createElement("p");
+      p.className = "chamber-empty";
+      p.textContent = "Bench is empty — pull elements from the supply below.";
+      chamber.appendChild(p);
+      return;
+    }
+    state.workspace.forEach(a=>{
+      const el = ELEMENTS[a.symbol];
+      const btn = document.createElement("button");
+      btn.className = "atom" + (state.selected.has(a.id) ? " selected" : "");
+      btn.style.background = el.bg;
+      btn.style.color = el.fg;
+      btn.dataset.atomId = a.id;
+      btn.title = el.name;
+      btn.textContent = a.symbol;
+      btn.addEventListener("click", ()=>toggleSelect(a.id));
+      chamber.appendChild(btn);
+    });
+  }
+
+  function renderPalette(){
+    const palette = document.getElementById("palette");
+    palette.innerHTML = "";
+    ORDER.forEach(sym=>{
+      const el = ELEMENTS[sym];
+      const btn = document.createElement("button");
+      btn.className = "cell";
+      btn.style.gridColumn = el.group;
+      btn.style.gridRow = el.period;
+      btn.style.background = el.bg;
+      btn.style.color = el.fg;
+      btn.title = el.name + " — pulling costs 1 move";
+      btn.disabled = state.movesLeft<=0 || state.won;
+      btn.innerHTML =
+        '<span class="z">' + el.z + '</span>' +
+        '<span class="sym">' + sym + '</span>' +
+        (chargesVisible() && el.charge!==null ? '<span class="charge">' + fmtCharge(el.charge) + '</span>' : '');
+      btn.addEventListener("click", ()=>spawnAtom(sym));
+      palette.appendChild(btn);
+    });
+    document.getElementById("palette-caption").textContent = chargesVisible()
+      ? "Carbon, silicon, boron and the noble gases sit on the shelf as distractors — they don't form simple ions at this tier, same as an unused reagent bottle."
+      : "Charges are hidden from here on — read them off each element's group instead of the tile.";
+  }
+
+  function render(){
+    renderDocket();
+    renderReadouts();
+    renderChamber();
+    renderPalette();
+    document.getElementById("btn-bond").disabled = state.selected.size===0 || state.won;
+    document.getElementById("btn-select-all").disabled = state.workspace.length===0;
+    document.getElementById("btn-discard").disabled = state.selected.size===0;
+  }
+
+  document.getElementById("btn-bond").addEventListener("click", attemptBond);
+  document.getElementById("btn-select-all").addEventListener("click", selectAll);
+  document.getElementById("btn-discard").addEventListener("click", discardSelected);
+  document.getElementById("btn-reset").addEventListener("click", resetGame);
+
+  /* =========================================================
+     Covalent mode
+     ========================================================= */
+  const CELEMENTS = {
+    H:  {name:"Hydrogen", z:1,  period:1, group:1,  capacity:1, bg:"#F3F1EC", fg:"#20282A"},
+    C:  {name:"Carbon",   z:6,  period:2, group:14, capacity:4, bg:"#2B2B2B", fg:"#F1F1F1"},
+    N:  {name:"Nitrogen", z:7,  period:2, group:15, capacity:3, bg:"#5C84E0", fg:"#0B1740"},
+    O:  {name:"Oxygen",   z:8,  period:2, group:16, capacity:2, bg:"#E14B3C", fg:"#3A0A05"},
+    Cl: {name:"Chlorine", z:17, period:3, group:17, capacity:1, bg:"#4FAE55", fg:"#0C2210"},
+  };
+  const CORDER = ["H","C","N","O","Cl"];
+
+  const CMOLECULES = [
+    {name:"Methane",            formula:"CH₄", atoms:{C:1, H:4}},
+    {name:"Water",               formula:"H₂O", atoms:{O:1, H:2}},
+    {name:"Hydrogen Chloride",   formula:"HCl", atoms:{H:1, Cl:1}},
+    {name:"Oxygen",               formula:"O₂",  atoms:{O:2}},
+    {name:"Carbon Dioxide",      formula:"CO₂", atoms:{C:1, O:2}},
+    {name:"Nitrogen",             formula:"N₂",  atoms:{N:2}},
+  ];
+  const TOTAL_C_MOVES = 30;
+
+  let cState, cNextId, cNextBondId;
+
+  function cFreshState(){
+    cNextId = 1;
+    cNextBondId = 1;
+    return {
+      movesLeft: TOTAL_C_MOVES,
+      score: 0,
+      challengeIndex: 0,
+      workspace: [],
+      bonds: [],
+      armedId: null,
+      won: false,
+    };
+  }
+
+  function setCFeedback(kind, msg){
+    const el = document.getElementById("c-feedback");
+    el.className = "feedback " + kind;
+    el.textContent = msg;
+  }
+
+  function usedValence(atomId){
+    return cState.bonds.reduce((sum,b)=> sum + ((b.aId===atomId || b.bId===atomId) ? b.order : 0), 0);
+  }
+
+  function cSpawnAtom(symbol){
+    if(cState.won) return;
+    if(cState.movesLeft<=0){ setCFeedback("error","No moves left to pull new elements — try assembling with what's on the bench."); return; }
+    cState.movesLeft--;
+    cState.workspace.push({id: cNextId++, symbol});
+    renderCovalent();
+  }
+
+  function armToggle(atomId){
+    if(cState.armedId===atomId){ cState.armedId=null; renderCovalent(); return; }
+    if(cState.armedId===null){ cState.armedId=atomId; renderCovalent(); return; }
+    createBond(cState.armedId, atomId);
+    cState.armedId=null;
+    renderCovalent();
+  }
+
+  function createBond(aId,bId){
+    const exists = cState.bonds.find(b=> (b.aId===aId&&b.bId===bId) || (b.aId===bId&&b.bId===aId));
+    if(exists){ setCFeedback("neutral","Already bonded — use the + on that bond below to add another shared pair."); return; }
+    const aAtom = cState.workspace.find(a=>a.id===aId);
+    const bAtom = cState.workspace.find(a=>a.id===bId);
+    if(!aAtom || !bAtom) return;
+    if(usedValence(aId) >= CELEMENTS[aAtom.symbol].capacity){
+      setCFeedback("error", CELEMENTS[aAtom.symbol].name + " already has every shared pair it can take — remove a bond first if you want to change it.");
+      return;
+    }
+    if(usedValence(bId) >= CELEMENTS[bAtom.symbol].capacity){
+      setCFeedback("error", CELEMENTS[bAtom.symbol].name + " already has every shared pair it can take — remove a bond first if you want to change it.");
+      return;
+    }
+    cState.bonds.push({id: cNextBondId++, aId, bId, order:1});
+    setCFeedback("neutral","Single bond formed — free. Use + below if the atoms still need more shared pairs.");
+  }
+
+  function removeAtomC(atomId){
+    cState.workspace = cState.workspace.filter(a=>a.id!==atomId);
+    cState.bonds = cState.bonds.filter(b=> b.aId!==atomId && b.bId!==atomId);
+    if(cState.armedId===atomId) cState.armedId=null;
+    renderCovalent();
+  }
+
+  function removeBond(bondId){
+    cState.bonds = cState.bonds.filter(b=>b.id!==bondId);
+    renderCovalent();
+  }
+
+  function upgradeBond(bondId){
+    const bond = cState.bonds.find(b=>b.id===bondId);
+    if(!bond) return;
+    if(cState.movesLeft<=0){ setCFeedback("error","No moves left to upgrade a bond."); return; }
+    const aAtom = cState.workspace.find(a=>a.id===bond.aId);
+    const bAtom = cState.workspace.find(a=>a.id===bond.bId);
+    const newUsedA = usedValence(bond.aId)+1, newUsedB = usedValence(bond.bId)+1;
+    if(bond.order>=3 || newUsedA>CELEMENTS[aAtom.symbol].capacity || newUsedB>CELEMENTS[bAtom.symbol].capacity){
+      setCFeedback("error","That bond can't take another shared pair — one of the atoms is already at capacity.");
+      return;
+    }
+    cState.movesLeft--;
+    bond.order++;
+    renderCovalent();
+  }
+
+  function clearBenchC(){
+    cState.workspace = [];
+    cState.bonds = [];
+    cState.armedId = null;
+    setCFeedback("neutral","Bench cleared — no move cost.");
+    renderCovalent();
+  }
+
+  function getComponents(){
+    const adj = {};
+    cState.bonds.forEach(b=>{
+      (adj[b.aId] = adj[b.aId] || []).push(b.bId);
+      (adj[b.bId] = adj[b.bId] || []).push(b.aId);
+    });
+    const visited = new Set();
+    const comps = [];
+    Object.keys(adj).forEach(startIdStr=>{
+      const startId = Number(startIdStr);
+      if(visited.has(startId)) return;
+      const stack=[startId]; const comp=new Set();
+      while(stack.length){
+        const cur=stack.pop();
+        if(comp.has(cur)) continue;
+        comp.add(cur); visited.add(cur);
+        (adj[cur]||[]).forEach(n=>{ if(!comp.has(n)) stack.push(n); });
+      }
+      comps.push(Array.from(comp));
+    });
+    return comps;
+  }
+
+  function symbolCounts(atomIds){
+    const counts = {};
+    atomIds.forEach(id=>{
+      const atom = cState.workspace.find(a=>a.id===id);
+      if(atom) counts[atom.symbol] = (counts[atom.symbol]||0) + 1;
+    });
+    return counts;
+  }
+
+  function isComplete(atomIds){
+    return atomIds.every(id=>{
+      const atom = cState.workspace.find(a=>a.id===id);
+      return atom && usedValence(id) === CELEMENTS[atom.symbol].capacity;
+    });
+  }
+
+  function countsEqual(a,b){
+    const keys = new Set(Object.keys(a).concat(Object.keys(b)));
+    for(const k of keys){ if((a[k]||0) !== (b[k]||0)) return false; }
+    return true;
+  }
+
+  function layoutMolecule(atoms, bonds){
+    const ids = atoms.map(a=>a.id);
+    const n = ids.length;
+    const W=220, H=170, cx=W/2, cy=H/2, R=60;
+    const positions = {};
+    if(n===1){ positions[ids[0]] = {x:cx,y:cy}; return {positions,W,H}; }
+    if(n===2){
+      positions[ids[0]] = {x:cx-52,y:cy};
+      positions[ids[1]] = {x:cx+52,y:cy};
+      return {positions,W,H};
+    }
+    const degree = {};
+    ids.forEach(id=>degree[id]=0);
+    bonds.forEach(b=>{ degree[b.aId]=(degree[b.aId]||0)+1; degree[b.bId]=(degree[b.bId]||0)+1; });
+    const hub = ids.find(id=>degree[id]===n-1);
+    if(hub!==undefined){
+      positions[hub] = {x:cx,y:cy};
+      const others = ids.filter(id=>id!==hub);
+      others.forEach((id,i)=>{
+        const angle = -Math.PI/2 + (2*Math.PI*i/others.length);
+        positions[id] = {x:cx+R*Math.cos(angle), y:cy+R*Math.sin(angle)};
+      });
+    } else {
+      ids.forEach((id,i)=>{
+        const angle = -Math.PI/2 + (2*Math.PI*i/n);
+        positions[id] = {x:cx+R*Math.cos(angle), y:cy+R*Math.sin(angle)};
+      });
+    }
+    return {positions,W,H};
+  }
+
+  function moleculeSVG(atoms, bonds){
+    const {positions,W,H} = layoutMolecule(atoms, bonds);
+    let svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Assembled molecule diagram">';
+    bonds.forEach(b=>{
+      const p1 = positions[b.aId], p2 = positions[b.bId];
+      if(!p1 || !p2) return;
+      const dx=p2.x-p1.x, dy=p2.y-p1.y;
+      const len = Math.sqrt(dx*dx+dy*dy) || 1;
+      const nx=-dy/len, ny=dx/len;
+      const offsets = b.order===1 ? [0] : b.order===2 ? [-3.5,3.5] : [-5.5,0,5.5];
+      offsets.forEach(off=>{
+        svg += '<line x1="'+(p1.x+nx*off)+'" y1="'+(p1.y+ny*off)+'" x2="'+(p2.x+nx*off)+'" y2="'+(p2.y+ny*off)+'" style="stroke:var(--ink);stroke-width:2.5px;stroke-linecap:round;"></line>';
+      });
+    });
+    atoms.forEach(a=>{
+      const el = CELEMENTS[a.symbol];
+      const p = positions[a.id];
+      if(!p) return;
+      svg += '<circle cx="'+p.x+'" cy="'+p.y+'" r="19" fill="'+el.bg+'" style="stroke:var(--surface);stroke-width:2px;"></circle>';
+      svg += '<text x="'+p.x+'" y="'+(p.y+4.5)+'" text-anchor="middle" style="font-family:\'IBM Plex Sans\',sans-serif;font-weight:700;font-size:13px;fill:'+el.fg+';">'+a.symbol+'</text>';
+    });
+    svg += '</svg>';
+    return svg;
+  }
+
+  function cAttemptAssemble(){
+    const comps = getComponents();
+    if(comps.length===0){ setCFeedback("neutral","Click two atoms on the bench to start a bond — the first shared pair is free."); return; }
+    const target = CMOLECULES[cState.challengeIndex].atoms;
+
+    for(const comp of comps){
+      const counts = symbolCounts(comp);
+      if(countsEqual(counts,target) && isComplete(comp)){
+        const molecule = CMOLECULES[cState.challengeIndex];
+        const ids = comp.slice();
+        const compAtoms = ids.map(id=>cState.workspace.find(a=>a.id===id)).filter(Boolean);
+        const compBonds = cState.bonds.filter(b=>ids.includes(b.aId) && ids.includes(b.bId));
+        const revealSVG = moleculeSVG(compAtoms, compBonds);
+        ids.forEach(id=>{
+          const tile = document.querySelector('[data-catom-id="'+id+'"]');
+          if(tile) tile.classList.add("leaving");
+        });
+        setTimeout(()=>{
+          cState.workspace = cState.workspace.filter(a=>!ids.includes(a.id));
+          cState.bonds = cState.bonds.filter(b=>!ids.includes(b.aId) && !ids.includes(b.bId));
+          cState.score++;
+          renderCovalent();
+          document.getElementById("c-chamber").innerHTML =
+            '<div class="molecule-reveal">' + revealSVG +
+            '<span class="reveal-name">' + molecule.name + '</span>' +
+            '<span class="reveal-formula">' + molecule.formula + '</span>' +
+            '</div>';
+          cCelebrate(molecule.name);
+        }, 160);
+        return;
+      }
+    }
+
+    for(const comp of comps){
+      const counts = symbolCounts(comp);
+      if(countsEqual(counts,target)){
+        const short = comp.map(id=>{
+          const atom = cState.workspace.find(a=>a.id===id);
+          return {symbol:atom.symbol, rem: CELEMENTS[atom.symbol].capacity - usedValence(id)};
+        }).find(x=>x.rem>0);
+        if(short){
+          setCFeedback("error", CELEMENTS[short.symbol].name + " still needs " + short.rem + " more shared pair" + (short.rem>1?"s":"") + " — add or upgrade a bond.");
+        } else {
+          setCFeedback("error","Check your bond orders — the atoms are right but something's not adding up.");
+        }
+        return;
+      }
+    }
+
+    if(comps.some(c=>isComplete(c))){
+      setCFeedback("neutral","That's a fully-bonded, valid molecule — just not " + CMOLECULES[cState.challengeIndex].name + ". Check which elements you're using.");
+      return;
+    }
+    setCFeedback("error","Not quite — check which elements are bonded and whether every atom's shared pairs add up.");
+  }
+
+  function cSpawnConfetti(){ spawnConfetti("c-shell"); }
+
+  function cCelebrate(name){
+    const shell = document.getElementById("c-shell");
+    shell.classList.add("flash-success");
+    setTimeout(()=> shell.classList.remove("flash-success"), 700);
+    setCFeedback("celebrate", "✓ " + name + " assembled — next request coming up.");
+    cSpawnConfetti();
+    setTimeout(()=>{
+      cState.challengeIndex++;
+      if(cState.challengeIndex >= CMOLECULES.length){
+        cState.won = true;
+      }
+      renderCovalent();
+      if(!cState.won) setCFeedback("neutral","Click two atoms on the bench to start a bond — the first shared pair is free.");
+    }, 1500);
+  }
+
+  function resetCovalent(){
+    cState = cFreshState();
+    setCFeedback("neutral","Bench reset. Click two atoms on the bench to start a bond — the first shared pair is free.");
+    renderCovalent();
+  }
+
+  function cRenderDocket(){
+    const slot = document.getElementById("c-docket-slot");
+    if(cState.won){
+      slot.innerHTML =
+        '<div class="banner win">' +
+          '<h2>Docket cleared</h2>' +
+          '<p>All ' + CMOLECULES.length + ' molecules assembled, with ' + cState.movesLeft + ' of ' + TOTAL_C_MOVES + ' moves left over.</p>' +
+          '<button class="btn primary" id="c-btn-play-again">Run it again</button>' +
+        '</div>';
+      document.getElementById("c-btn-play-again").addEventListener("click", resetCovalent);
+      return;
+    }
+    const m = CMOLECULES[cState.challengeIndex];
+    slot.innerHTML =
+      '<div class="docket">' +
+        '<div class="docket-top">' +
+          '<span class="docket-label">Request No. ' + (cState.challengeIndex+1) + ' / ' + CMOLECULES.length + '</span>' +
+        '</div>' +
+        '<p class="docket-name">' + m.name + '</p>' +
+        '<span class="docket-formula">' + m.formula + '</span>' +
+        '<p class="docket-hint">Every atom\'s shared pairs must exactly fill its bonding capacity — watch the badge on each atom.</p>' +
+      '</div>';
+  }
+
+  function cRenderReadouts(){
+    document.getElementById("c-read-moves").textContent = cState.movesLeft + " / " + TOTAL_C_MOVES;
+    document.getElementById("c-read-score").textContent = cState.score + " / " + CMOLECULES.length;
+    document.getElementById("c-read-bonds").textContent = String(cState.bonds.length);
+  }
+
+  function cRenderChamber(){
+    const chamber = document.getElementById("c-chamber");
+    chamber.innerHTML = "";
+    if(cState.workspace.length===0){
+      const p = document.createElement("p");
+      p.className = "chamber-empty";
+      p.textContent = "Bench is empty — pull elements from the supply below.";
+      chamber.appendChild(p);
+      return;
+    }
+    cState.workspace.forEach(a=>{
+      const el = CELEMENTS[a.symbol];
+      const used = usedValence(a.id);
+      const wrap = document.createElement("div");
+      wrap.className = "c-atom-wrap";
+
+      const btn = document.createElement("button");
+      btn.className = "atom" + (cState.armedId===a.id ? " selected" : "");
+      btn.style.background = el.bg;
+      btn.style.color = el.fg;
+      btn.dataset.catomId = a.id;
+      btn.title = el.name;
+      btn.textContent = a.symbol;
+      btn.addEventListener("click", ()=>armToggle(a.id));
+
+      const badge = document.createElement("span");
+      badge.className = "c-atom-badge";
+      badge.textContent = used + "/" + el.capacity;
+
+      const rm = document.createElement("button");
+      rm.className = "c-atom-remove";
+      rm.textContent = "×";
+      rm.title = "Remove atom";
+      rm.addEventListener("click", (e)=>{ e.stopPropagation(); removeAtomC(a.id); });
+
+      wrap.appendChild(btn);
+      wrap.appendChild(badge);
+      wrap.appendChild(rm);
+      chamber.appendChild(wrap);
+    });
+  }
+
+  function cRenderBondList(){
+    const list = document.getElementById("c-bondlist");
+    list.innerHTML = "";
+    if(cState.bonds.length===0){
+      const p = document.createElement("p");
+      p.className = "bondlist-empty";
+      p.textContent = "No bonds yet — click two atoms above to connect them.";
+      list.appendChild(p);
+      return;
+    }
+    const glyphs = {1:"–",2:"=",3:"≡"};
+    cState.bonds.forEach(b=>{
+      const aAtom = cState.workspace.find(x=>x.id===b.aId);
+      const bAtom = cState.workspace.find(x=>x.id===b.bId);
+      if(!aAtom || !bAtom) return;
+      const chip = document.createElement("div");
+      chip.className = "bond-chip";
+
+      const aBadge = document.createElement("span");
+      aBadge.className = "sym-badge";
+      aBadge.textContent = aAtom.symbol;
+      aBadge.style.background = CELEMENTS[aAtom.symbol].bg;
+      aBadge.style.color = CELEMENTS[aAtom.symbol].fg;
+
+      const bBadge = document.createElement("span");
+      bBadge.className = "sym-badge";
+      bBadge.textContent = bAtom.symbol;
+      bBadge.style.background = CELEMENTS[bAtom.symbol].bg;
+      bBadge.style.color = CELEMENTS[bAtom.symbol].fg;
+
+      const glyph = document.createElement("span");
+      glyph.className = "order-glyph";
+      glyph.textContent = glyphs[b.order];
+
+      const newUsedA = usedValence(b.aId)+1, newUsedB = usedValence(b.bId)+1;
+      const canUpgrade = b.order<3 && newUsedA<=CELEMENTS[aAtom.symbol].capacity && newUsedB<=CELEMENTS[bAtom.symbol].capacity;
+
+      const plus = document.createElement("button");
+      plus.className = "plus";
+      plus.textContent = "+1";
+      plus.title = "Add a shared pair (costs a move)";
+      plus.disabled = !canUpgrade || cState.movesLeft<=0 || cState.won;
+      plus.addEventListener("click", ()=>upgradeBond(b.id));
+
+      const rm = document.createElement("button");
+      rm.className = "remove";
+      rm.textContent = "×";
+      rm.title = "Remove this bond";
+      rm.addEventListener("click", ()=>removeBond(b.id));
+
+      chip.appendChild(aBadge);
+      chip.appendChild(glyph);
+      chip.appendChild(bBadge);
+      chip.appendChild(plus);
+      chip.appendChild(rm);
+      list.appendChild(chip);
+    });
+  }
+
+  function cRenderPalette(){
+    const palette = document.getElementById("c-palette");
+    palette.innerHTML = "";
+    CORDER.forEach(sym=>{
+      const el = CELEMENTS[sym];
+      const btn = document.createElement("button");
+      btn.className = "cell";
+      btn.style.gridColumn = el.group;
+      btn.style.gridRow = el.period;
+      btn.style.background = el.bg;
+      btn.style.color = el.fg;
+      btn.title = el.name + " — pulling costs 1 move";
+      btn.disabled = cState.movesLeft<=0 || cState.won;
+      btn.innerHTML =
+        '<span class="z">' + el.z + '</span>' +
+        '<span class="sym">' + sym + '</span>' +
+        '<span class="charge">×' + el.capacity + '</span>';
+      btn.addEventListener("click", ()=>cSpawnAtom(sym));
+      palette.appendChild(btn);
+    });
+    document.getElementById("c-palette-caption").textContent =
+      "The small number on each tile is its bonding capacity — how many shared pairs of electrons it needs to complete its valence.";
+  }
+
+  function renderCovalent(){
+    cRenderDocket();
+    cRenderReadouts();
+    cRenderChamber();
+    cRenderBondList();
+    cRenderPalette();
+    document.getElementById("c-btn-assemble").disabled = cState.won || cState.bonds.length===0;
+    document.getElementById("c-btn-discard").disabled = cState.workspace.length===0;
+  }
+
+  document.getElementById("c-btn-assemble").addEventListener("click", cAttemptAssemble);
+  document.getElementById("c-btn-discard").addEventListener("click", clearBenchC);
+  document.getElementById("c-btn-reset").addEventListener("click", resetCovalent);
+  document.getElementById("tab-ionic").addEventListener("click", ()=>setMode("ionic"));
+  document.getElementById("tab-covalent").addEventListener("click", ()=>setMode("covalent"));
+
+  /* =========================================================
+     Boot / hot-reload
+     ========================================================= */
+  function snapshotState(){
+    return {
+      mode: currentMode,
+      ionic: {
+        movesLeft: state.movesLeft,
+        score: state.score,
+        challengeIndex: state.challengeIndex,
+        workspace: state.workspace,
+        selected: Array.from(state.selected),
+        won: state.won,
+      },
+      covalent: {
+        movesLeft: cState.movesLeft,
+        score: cState.score,
+        challengeIndex: cState.challengeIndex,
+        workspace: cState.workspace,
+        bonds: cState.bonds,
+        armedId: cState.armedId,
+        won: cState.won,
+      },
+    };
+  }
+
+  function start(saved){
+    state = freshState();
+    cState = cFreshState();
+    if(saved && saved.ionic){
+      Object.assign(state, saved.ionic);
+      state.selected = new Set(saved.ionic.selected || []);
+      if(state.workspace.length) nextId = Math.max.apply(null, state.workspace.map(a=>a.id)) + 1;
+    }
+    if(saved && saved.covalent){
+      Object.assign(cState, saved.covalent);
+      if(cState.workspace.length) cNextId = Math.max.apply(null, cState.workspace.map(a=>a.id)) + 1;
+      if(cState.bonds.length) cNextBondId = Math.max.apply(null, cState.bonds.map(b=>b.id)) + 1;
+    }
+    render();
+    renderCovalent();
+    setMode((saved && saved.mode) || "ionic");
+  }
+
+  if(window.claude && window.claude.hot){
+    window.claude.hot.snapshot(snapshotState);
+    window.claude.hot.ready ? window.claude.hot.ready(start) : start(window.claude.hot.data || {});
+  } else {
+    start();
+  }
+})();
+</script>
