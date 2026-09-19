@@ -898,6 +898,7 @@
       workspace: [],
       bonds: [],
       armedId: null,
+      openBondId: null,
       won: false,
     };
   }
@@ -916,7 +917,7 @@
     if(cState.won) return;
     if(cState.movesLeft<=0){ setCFeedback("error","No moves left to pull new elements — try assembling with what's on the bench."); return; }
     cState.movesLeft--;
-    cState.workspace.push({id: cNextId++, symbol});
+    cState.workspace.push({id: cNextId++, symbol, pos: null});
     renderCovalent();
   }
 
