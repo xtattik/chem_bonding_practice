@@ -975,7 +975,10 @@
       runRelax();
       return;
     }
-    const delta = action==="up" ? 1 : -1;
+    let delta;
+    if(action==="down") delta = -1;
+    else if(action==="up") delta = 1;
+    else return;
     const newOrder = bond.order + delta;
     if(newOrder < 1){
       cState.bonds = cState.bonds.filter(b=>b.id!==bondId);
@@ -983,7 +986,7 @@
       runRelax();
       return;
     }
-    if(newOrder > 3) return;
+    if(newOrder > 3){ setCFeedback("error","Already a triple bond — that's the maximum."); return; }
     if(action==="up" && cState.movesLeft<=0){ setCFeedback("error","No moves left to upgrade a bond."); return; }
     const aAtom = cState.workspace.find(a=>a.id===bond.aId);
     const bAtom = cState.workspace.find(a=>a.id===bond.bId);
