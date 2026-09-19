@@ -966,24 +966,38 @@
     runRelax();
   }
 
-  function removeBond(bondId){
-    cState.bonds = cState.bonds.filter(b=>b.id!==bondId);
-    renderCovalent();
-  }
-
-  function upgradeBond(bondId){
+  function setBondOrder(bondId, action){
     const bond = cState.bonds.find(b=>b.id===bondId);
     if(!bond) return;
-    if(cState.movesLeft<=0){ setCFeedback("error","No moves left to upgrade a bond."); return; }
-    const aAtom = cState.workspace.find(a=>a.id===bond.aId);
-    const bAtom = cState.workspace.find(a=>a.id===bond.bId);
-    const newUsedA = usedValence(bond.aId)+1, newUsedB = usedValence(bond.bId)+1;
-    if(bond.order>=3 || newUsedA>CELEMENTS[aAtom.symbol].capacity || newUsedB>CELEMENTS[bAtom.symbol].capacity){
-      setCFeedback("error","That bond can't take another shared pair — one of the atoms is already at capacity.");
+    if(action==="remove"){
+      cState.bonds = cState.bonds.filter(b=>b.id!==bondId);
+      cState.openBondId = null;
+      runRelax();
       return;
     }
-    cState.movesLeft--;
-    bond.order++;
+    const delta = action==="up" ? 1 : -1;
+    const newOrder = bond.order + delta;
+    if(newOrder < 1){
+      cState.bonds = cState.bonds.filter(b=>b.id!==bondId);
+      cState.openBondId = null;
+      runRelax();
+      return;
+    }
+    if(newOrder > 3) return;
+    if(action==="up" && cState.movesLeft<=0){ setCFeedback("error","No moves left to upgrade a bond."); return; }
+    const aAtom = cState.workspace.find(a=>a.id===bond.aId);
+    const bAtom = cState.workspace.find(a=>a.id===bond.bId);
+    const otherUsed = (id)=> cState.bonds.reduce((s,bb)=> s + (bb.id!==bondId && (bb.aId===id||bb.bId===id) ? bb.order : 0), 0);
+    if(otherUsed(bond.aId)+newOrder > CELEMENTS[aAtom.symbol].capacity){
+      setCFeedback("error", CELEMENTS[aAtom.symbol].name + " already has every shared pair it can take.");
+      return;
+    }
+    if(otherUsed(bond.bId)+newOrder > CELEMENTS[bAtom.symbol].capacity){
+      setCFeedback("error", CELEMENTS[bAtom.symbol].name + " already has every shared pair it can take.");
+      return;
+    }
+    if(action==="up") cState.movesLeft--;
+    bond.order = newOrder;
     renderCovalent();
   }
 
@@ -1290,13 +1304,13 @@
       plus.textContent = "+1";
       plus.title = "Add a shared pair (costs a move)";
       plus.disabled = !canUpgrade || cState.movesLeft<=0 || cState.won;
-      plus.addEventListener("click", ()=>upgradeBond(b.id));
+      plus.addEventListener("click", ()=>setBondOrder(b.id, "up"));
 
       const rm = document.createElement("button");
       rm.className = "remove";
       rm.textContent = "×";
       rm.title = "Remove this bond";
-      rm.addEventListener("click", ()=>removeBond(b.id));
+      rm.addEventListener("click", ()=>setBondOrder(b.id, "remove"));
 
       chip.appendChild(aBadge);
       chip.appendChild(glyph);
