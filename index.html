@@ -961,9 +961,11 @@
   }
 
   function clearBenchC(){
+    if(relaxRafId){ cancelAnimationFrame(relaxRafId); relaxRafId = null; }
     cState.workspace = [];
     cState.bonds = [];
     cState.armedId = null;
+    cState.openBondId = null;
     setCFeedback("neutral","Bench cleared — no move cost.");
     renderCovalent();
   }
@@ -1081,6 +1083,7 @@
   }
 
   function resetCovalent(){
+    if(relaxRafId){ cancelAnimationFrame(relaxRafId); relaxRafId = null; }
     cState = cFreshState();
     setCFeedback("neutral","Bench reset. Click two atoms on the bench to start a bond — the first shared pair is free.");
     renderCovalent();
