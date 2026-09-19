@@ -403,7 +403,7 @@
 
     <div class="chamber-shell" id="c-shell">
       <p class="chamber-label">Reaction stage</p>
-      <svg id="c-stage" viewBox="0 0 480 260" style="width:100%;height:260px;display:block;"></svg>
+      <svg id="c-stage" viewBox="0 0 480 260" style="width:100%;height:260px;display:block;" role="img" aria-label="Molecule being built"></svg>
       <p class="chamber-label" style="margin-top:16px;">Tray</p>
       <div class="chamber" id="c-tray" style="min-height:64px;"></div>
       <div class="chamber-actions">
@@ -1328,6 +1328,9 @@
   document.getElementById("c-btn-reset").addEventListener("click", resetCovalent);
   document.getElementById("tab-ionic").addEventListener("click", ()=>setMode("ionic"));
   document.getElementById("tab-covalent").addEventListener("click", ()=>setMode("covalent"));
+  document.getElementById("c-stage").addEventListener("click", ()=>{
+    if(cState.openBondId!==null){ cState.openBondId = null; renderCovalent(); }
+  });
 
   /* =========================================================
      Boot / hot-reload
