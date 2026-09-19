@@ -229,13 +229,6 @@
   @keyframes leave{to{transform:scale(0);opacity:0;}}
 
   .c-atom-wrap{position:relative;width:46px;height:46px;}
-  .c-atom-badge{
-    position:absolute;bottom:-6px;right:-6px;
-    background:var(--surface);color:var(--ink);
-    font-family:"IBM Plex Mono",monospace;font-size:9px;font-weight:600;
-    border-radius:8px;padding:1px 4px;box-shadow:var(--shadow);line-height:1.3;
-    pointer-events:none;
-  }
   .c-atom-remove{
     position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;
     border:none;background:var(--surface);color:var(--muted);font-size:11px;line-height:1;
@@ -255,32 +248,6 @@
     font-family:"IBM Plex Mono", monospace;font-size:12.5px;font-weight:600;
     background:var(--accent-soft);color:var(--accent);padding:2px 9px;border-radius:5px;
   }
-
-  .bondlist{display:flex;flex-wrap:wrap;gap:8px;min-height:22px;align-items:center;}
-  .bondlist-empty{color:var(--muted);font-size:12.5px;}
-  .bond-chip{
-    display:flex;align-items:center;gap:5px;
-    background:var(--surface);border:1px solid var(--line);border-radius:999px;
-    padding:4px 6px 4px 4px;box-shadow:var(--shadow);
-  }
-  .bond-chip .sym-badge{
-    width:20px;height:20px;border-radius:50%;flex:none;
-    display:flex;align-items:center;justify-content:center;
-    font-family:"IBM Plex Sans",sans-serif;font-weight:700;font-size:9.5px;
-  }
-  .bond-chip .order-glyph{
-    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:15px;
-    color:var(--muted);min-width:12px;text-align:center;
-  }
-  .bond-chip button{
-    border:none;background:transparent;cursor:pointer;
-    font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
-    border-radius:5px;padding:2px 6px;
-  }
-  .bond-chip button.plus{color:var(--accent);}
-  .bond-chip button.plus:disabled{opacity:.3;cursor:not-allowed;}
-  .bond-chip button.remove{color:var(--muted);}
-  .bond-chip button.remove:hover{color:var(--danger);}
 
   .chamber-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
 
@@ -344,6 +311,8 @@
   .cell .sym{font-weight:700;font-size:13px;line-height:1;}
   .cell .charge{font-family:"IBM Plex Mono",monospace;font-size:7px;position:absolute;bottom:2px;right:3px;opacity:.9;}
   .palette-caption{margin:10px 2px 0;font-size:11.5px;color:var(--muted);max-width:60ch;}
+
+  #c-stage circle, #c-stage text { transform-box: fill-box; transform-origin: center; }
 
   @media (prefers-reduced-motion: reduce){
     .atom, .cell, button.btn, .chamber-shell.flash-success{animation:none !important;transition:none !important;}
@@ -433,10 +402,10 @@
     <div id="c-docket-slot"></div>
 
     <div class="chamber-shell" id="c-shell">
-      <p class="chamber-label">Reaction bench</p>
-      <div class="chamber" id="c-chamber"></div>
-      <p class="chamber-label" style="margin-top:16px;">Bonds formed</p>
-      <div class="bondlist" id="c-bondlist"></div>
+      <p class="chamber-label">Reaction stage</p>
+      <svg id="c-stage" viewBox="0 0 480 260" style="width:100%;height:260px;display:block;"></svg>
+      <p class="chamber-label" style="margin-top:16px;">Tray</p>
+      <div class="chamber" id="c-tray" style="min-height:64px;"></div>
       <div class="chamber-actions">
         <button class="btn primary" id="c-btn-assemble">Assemble molecule</button>
         <button class="btn ghost" id="c-btn-discard">Clear bench</button>
@@ -1223,19 +1192,80 @@
     document.getElementById("c-read-bonds").textContent = String(cState.bonds.length);
   }
 
-  function cRenderChamber(){
-    const chamber = document.getElementById("c-chamber");
-    chamber.innerHTML = "";
-    if(cState.workspace.length===0){
-      const p = document.createElement("p");
-      p.className = "chamber-empty";
-      p.textContent = "Bench is empty — pull elements from the supply below.";
-      chamber.appendChild(p);
+  function cRenderStage(){
+    const svgEl = document.getElementById("c-stage");
+    const placed = cState.workspace.filter(a=>a.pos);
+    if(placed.length===0){
+      svgEl.innerHTML = '<text x="'+(STAGE_W/2)+'" y="'+(STAGE_H/2)+'" text-anchor="middle" font-size="13" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif">Bench is empty — pull elements from the supply below.</text>';
       return;
     }
-    cState.workspace.forEach(a=>{
+    let svg = "";
+    cState.bonds.forEach(b=>{
+      const aAtom = cState.workspace.find(a=>a.id===b.aId), bAtom = cState.workspace.find(a=>a.id===b.bId);
+      if(!aAtom || !bAtom || !aAtom.pos || !bAtom.pos) return;
+      const p1=aAtom.pos, p2=bAtom.pos;
+      const dx=p2.x-p1.x, dy=p2.y-p1.y, len=Math.hypot(dx,dy)||1;
+      const nx=-dy/len, ny=dx/len;
+      const offsets = b.order===1?[0]:b.order===2?[-3.5,3.5]:[-5.5,0,5.5];
+      offsets.forEach(off=>{
+        svg += '<line x1="'+(p1.x+nx*off)+'" y1="'+(p1.y+ny*off)+'" x2="'+(p2.x+nx*off)+'" y2="'+(p2.y+ny*off)+'" style="stroke:var(--accent);stroke-width:2.5px;stroke-linecap:round;"></line>';
+      });
+      svg += '<line data-bondhit="'+b.id+'" x1="'+p1.x+'" y1="'+p1.y+'" x2="'+p2.x+'" y2="'+p2.y+'" stroke="transparent" stroke-width="18" style="cursor:pointer;pointer-events:auto;"></line>';
+    });
+    placed.forEach(a=>{
       const el = CELEMENTS[a.symbol];
       const used = usedValence(a.id);
+      const ring = cState.armedId===a.id ? '<circle cx="'+a.pos.x+'" cy="'+a.pos.y+'" r="27" fill="none" stroke="var(--accent)" stroke-width="2.5"></circle>' : '';
+      svg += ring;
+      svg += '<g data-atomid="'+a.id+'">';
+      svg += '<circle data-atomhit="'+a.id+'" cx="'+a.pos.x+'" cy="'+a.pos.y+'" r="23" fill="'+el.bg+'" stroke="var(--surface)" stroke-width="2" style="cursor:pointer;pointer-events:auto;"></circle>';
+      svg += '<text x="'+a.pos.x+'" y="'+(a.pos.y+5)+'" text-anchor="middle" font-size="14" font-weight="700" fill="'+el.fg+'" font-family="IBM Plex Sans, sans-serif" style="pointer-events:none;">'+a.symbol+'</text>';
+      svg += '<text x="'+a.pos.x+'" y="'+(a.pos.y+34)+'" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="IBM Plex Mono, monospace">'+used+'/'+el.capacity+'</text>';
+      svg += '</g>';
+      svg += '<circle data-removehit="'+a.id+'" cx="'+(a.pos.x+18)+'" cy="'+(a.pos.y-18)+'" r="9" fill="var(--surface)" stroke="var(--line)" style="cursor:pointer;pointer-events:auto;"></circle>';
+      svg += '<text x="'+(a.pos.x+18)+'" y="'+(a.pos.y-14)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono, monospace" style="pointer-events:none;">&#10005;</text>';
+    });
+    if(cState.openBondId!==null){
+      const b = cState.bonds.find(bb=>bb.id===cState.openBondId);
+      if(b){
+        const aAtom = cState.workspace.find(a=>a.id===b.aId), bAtom = cState.workspace.find(a=>a.id===b.bId);
+        const p1=aAtom.pos, p2=bAtom.pos;
+        const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2 - 26;
+        svg += '<rect x="'+(mx-48)+'" y="'+(my-16)+'" width="96" height="32" rx="8" fill="var(--surface)" stroke="var(--line)"></rect>';
+        svg += '<text data-pop="down" x="'+(mx-32)+'" y="'+(my+5)+'" text-anchor="middle" font-size="16" font-weight="700" fill="var(--ink)" font-family="IBM Plex Mono, monospace" style="cursor:pointer;pointer-events:auto;">&#8722;</text>';
+        svg += '<text x="'+mx+'" y="'+(my+5)+'" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="IBM Plex Mono, monospace">'+b.order+'</text>';
+        svg += '<text data-pop="up" x="'+(mx+20)+'" y="'+(my+5)+'" text-anchor="middle" font-size="16" font-weight="700" fill="var(--ink)" font-family="IBM Plex Mono, monospace" style="cursor:pointer;pointer-events:auto;">+</text>';
+        svg += '<text data-pop="remove" x="'+(mx+42)+'" y="'+(my+5)+'" text-anchor="middle" font-size="13" font-weight="700" fill="var(--danger)" font-family="IBM Plex Mono, monospace" style="cursor:pointer;pointer-events:auto;">&#10005;</text>';
+      }
+    }
+    svgEl.innerHTML = svg;
+    svgEl.querySelectorAll('[data-atomhit]').forEach(elx=>{
+      elx.addEventListener("click", (e)=>{ e.stopPropagation(); armToggle(Number(elx.dataset.atomhit)); });
+    });
+    svgEl.querySelectorAll('[data-removehit]').forEach(elx=>{
+      elx.addEventListener("click", (e)=>{ e.stopPropagation(); removeAtomC(Number(elx.dataset.removehit)); });
+    });
+    svgEl.querySelectorAll('[data-bondhit]').forEach(elx=>{
+      elx.addEventListener("click", (e)=>{ e.stopPropagation(); const id=Number(elx.dataset.bondhit); cState.openBondId = cState.openBondId===id? null : id; renderCovalent(); });
+    });
+    svgEl.querySelectorAll('[data-pop]').forEach(elx=>{
+      elx.addEventListener("click", (e)=>{ e.stopPropagation(); setBondOrder(cState.openBondId, elx.dataset.pop); });
+    });
+  }
+
+  function cRenderTray(){
+    const tray = document.getElementById("c-tray");
+    tray.innerHTML = "";
+    const unplaced = cState.workspace.filter(a=>!a.pos);
+    if(unplaced.length===0){
+      const p = document.createElement("p");
+      p.className = "chamber-empty";
+      p.textContent = cState.workspace.length===0 ? "Pull elements from the supply below to begin." : "All atoms placed on the stage.";
+      tray.appendChild(p);
+      return;
+    }
+    unplaced.forEach(a=>{
+      const el = CELEMENTS[a.symbol];
       const wrap = document.createElement("div");
       wrap.className = "c-atom-wrap";
 
@@ -1243,14 +1273,9 @@
       btn.className = "atom" + (cState.armedId===a.id ? " selected" : "");
       btn.style.background = el.bg;
       btn.style.color = el.fg;
-      btn.dataset.catomId = a.id;
       btn.title = el.name;
       btn.textContent = a.symbol;
       btn.addEventListener("click", ()=>armToggle(a.id));
-
-      const badge = document.createElement("span");
-      badge.className = "c-atom-badge";
-      badge.textContent = used + "/" + el.capacity;
 
       const rm = document.createElement("button");
       rm.className = "c-atom-remove";
@@ -1259,68 +1284,8 @@
       rm.addEventListener("click", (e)=>{ e.stopPropagation(); removeAtomC(a.id); });
 
       wrap.appendChild(btn);
-      wrap.appendChild(badge);
       wrap.appendChild(rm);
-      chamber.appendChild(wrap);
-    });
-  }
-
-  function cRenderBondList(){
-    const list = document.getElementById("c-bondlist");
-    list.innerHTML = "";
-    if(cState.bonds.length===0){
-      const p = document.createElement("p");
-      p.className = "bondlist-empty";
-      p.textContent = "No bonds yet — click two atoms above to connect them.";
-      list.appendChild(p);
-      return;
-    }
-    const glyphs = {1:"–",2:"=",3:"≡"};
-    cState.bonds.forEach(b=>{
-      const aAtom = cState.workspace.find(x=>x.id===b.aId);
-      const bAtom = cState.workspace.find(x=>x.id===b.bId);
-      if(!aAtom || !bAtom) return;
-      const chip = document.createElement("div");
-      chip.className = "bond-chip";
-
-      const aBadge = document.createElement("span");
-      aBadge.className = "sym-badge";
-      aBadge.textContent = aAtom.symbol;
-      aBadge.style.background = CELEMENTS[aAtom.symbol].bg;
-      aBadge.style.color = CELEMENTS[aAtom.symbol].fg;
-
-      const bBadge = document.createElement("span");
-      bBadge.className = "sym-badge";
-      bBadge.textContent = bAtom.symbol;
-      bBadge.style.background = CELEMENTS[bAtom.symbol].bg;
-      bBadge.style.color = CELEMENTS[bAtom.symbol].fg;
-
-      const glyph = document.createElement("span");
-      glyph.className = "order-glyph";
-      glyph.textContent = glyphs[b.order];
-
-      const newUsedA = usedValence(b.aId)+1, newUsedB = usedValence(b.bId)+1;
-      const canUpgrade = b.order<3 && newUsedA<=CELEMENTS[aAtom.symbol].capacity && newUsedB<=CELEMENTS[bAtom.symbol].capacity;
-
-      const plus = document.createElement("button");
-      plus.className = "plus";
-      plus.textContent = "+1";
-      plus.title = "Add a shared pair (costs a move)";
-      plus.disabled = !canUpgrade || cState.movesLeft<=0 || cState.won;
-      plus.addEventListener("click", ()=>setBondOrder(b.id, "up"));
-
-      const rm = document.createElement("button");
-      rm.className = "remove";
-      rm.textContent = "×";
-      rm.title = "Remove this bond";
-      rm.addEventListener("click", ()=>setBondOrder(b.id, "remove"));
-
-      chip.appendChild(aBadge);
-      chip.appendChild(glyph);
-      chip.appendChild(bBadge);
-      chip.appendChild(plus);
-      chip.appendChild(rm);
-      list.appendChild(chip);
+      tray.appendChild(wrap);
     });
   }
 
@@ -1351,8 +1316,8 @@
   function renderCovalent(){
     cRenderDocket();
     cRenderReadouts();
-    cRenderChamber();
-    cRenderBondList();
+    cRenderStage();
+    cRenderTray();
     cRenderPalette();
     document.getElementById("c-btn-assemble").disabled = cState.won || cState.bonds.length===0;
     document.getElementById("c-btn-discard").disabled = cState.workspace.length===0;
