@@ -801,6 +801,91 @@
   ];
   const TOTAL_C_MOVES = 30;
 
+  /* ---------- layout engine (pure — no DOM) ----------
+     Positions atoms by relaxing a simple spring simulation every time the
+     bond graph changes, so the final shape depends only on which atoms are
+     bonded to which, never on the order they were clicked in. */
+  const STAGE_W = 480, STAGE_H = 260;
+  const BOND_REST_LEN = 62, REPEL_K = 9000, SPRING_K = 0.10, CENTER_K = 0.004, MAX_STEP = 5;
+  const RELAX_MIN_TICKS = 20, RELAX_MAX_TICKS = 200, RELAX_STOP_THRESHOLD = 0.05;
+
+  function seedPosition(newAtomId, anchorId){
+    const anchor = cState.workspace.find(a=>a.id===anchorId);
+    const atom = cState.workspace.find(a=>a.id===newAtomId);
+    if(!anchor || !anchor.pos){
+      atom.pos = {x: STAGE_W/2 + (Math.random()-0.5)*20, y: STAGE_H/2 + (Math.random()-0.5)*20};
+      return;
+    }
+    const angle = Math.random()*Math.PI*2;
+    const jitter = BOND_REST_LEN*0.7;
+    atom.pos = {x: anchor.pos.x + jitter*Math.cos(angle), y: anchor.pos.y + jitter*Math.sin(angle)};
+  }
+
+  function relaxTick(){
+    const placed = cState.workspace.filter(a=>a.pos);
+    const disp = {};
+    placed.forEach(a=> disp[a.id] = {x:0,y:0});
+    for(let i=0;i<placed.length;i++){
+      for(let j=i+1;j<placed.length;j++){
+        const A=placed[i].pos, B=placed[j].pos;
+        const dx=B.x-A.x, dy=B.y-A.y;
+        const dist = Math.hypot(dx,dy)||0.01;
+        const force = Math.min(REPEL_K/(dist*dist), 40);
+        const ux=dx/dist, uy=dy/dist;
+        disp[placed[i].id].x -= ux*force; disp[placed[i].id].y -= uy*force;
+        disp[placed[j].id].x += ux*force; disp[placed[j].id].y += uy*force;
+      }
+    }
+    cState.bonds.forEach(b=>{
+      const A = cState.workspace.find(a=>a.id===b.aId), B = cState.workspace.find(a=>a.id===b.bId);
+      if(!A || !B || !A.pos || !B.pos) return;
+      const dx=B.pos.x-A.pos.x, dy=B.pos.y-A.pos.y;
+      const dist = Math.hypot(dx,dy)||0.01;
+      const force = SPRING_K*(dist-BOND_REST_LEN);
+      const ux=dx/dist, uy=dy/dist;
+      disp[A.id].x += ux*force; disp[A.id].y += uy*force;
+      disp[B.id].x -= ux*force; disp[B.id].y -= uy*force;
+    });
+    placed.forEach(a=>{
+      disp[a.id].x += (STAGE_W/2 - a.pos.x)*CENTER_K;
+      disp[a.id].y += (STAGE_H/2 - a.pos.y)*CENTER_K;
+    });
+    let maxMove = 0;
+    placed.forEach(a=>{
+      let dx=disp[a.id].x, dy=disp[a.id].y;
+      const mag = Math.hypot(dx,dy);
+      if(mag>MAX_STEP){ dx = dx/mag*MAX_STEP; dy = dy/mag*MAX_STEP; }
+      a.pos.x = Math.max(20, Math.min(STAGE_W-20, a.pos.x+dx));
+      a.pos.y = Math.max(20, Math.min(STAGE_H-20, a.pos.y+dy));
+      maxMove = Math.max(maxMove, Math.hypot(dx,dy));
+    });
+    return maxMove;
+  }
+
+  let relaxRafId = null;
+  function runRelax(){
+    if(relaxRafId){ cancelAnimationFrame(relaxRafId); relaxRafId = null; }
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(reduceMotion){
+      for(let i=0;i<RELAX_MAX_TICKS;i++){ relaxTick(); }
+      renderCovalent();
+      return;
+    }
+    let settledTicks = 0, totalTicks = 0;
+    function step(){
+      const m = relaxTick();
+      totalTicks++;
+      renderCovalent();
+      settledTicks = (m < RELAX_STOP_THRESHOLD) ? settledTicks+1 : 0;
+      if(totalTicks < RELAX_MAX_TICKS && (settledTicks < 5 || totalTicks < RELAX_MIN_TICKS)){
+        relaxRafId = requestAnimationFrame(step);
+      } else {
+        relaxRafId = null;
+      }
+    }
+    step();
+  }
+
   let cState, cNextId, cNextBondId;
 
   function cFreshState(){
