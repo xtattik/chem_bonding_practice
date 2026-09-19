@@ -922,6 +922,7 @@
   }
 
   function armToggle(atomId){
+    cState.openBondId = null;
     if(cState.armedId===atomId){ cState.armedId=null; renderCovalent(); return; }
     if(cState.armedId===null){ cState.armedId=atomId; renderCovalent(); return; }
     createBond(cState.armedId, atomId);
@@ -930,8 +931,9 @@
   }
 
   function createBond(aId,bId){
+    if(aId===bId) return;
     const exists = cState.bonds.find(b=> (b.aId===aId&&b.bId===bId) || (b.aId===bId&&b.bId===aId));
-    if(exists){ setCFeedback("neutral","Already bonded — use the + on that bond below to add another shared pair."); return; }
+    if(exists){ setCFeedback("neutral","Already bonded — click the bond line to change its order."); return; }
     const aAtom = cState.workspace.find(a=>a.id===aId);
     const bAtom = cState.workspace.find(a=>a.id===bId);
     if(!aAtom || !bAtom) return;
@@ -943,15 +945,25 @@
       setCFeedback("error", CELEMENTS[bAtom.symbol].name + " already has every shared pair it can take — remove a bond first if you want to change it.");
       return;
     }
+    if(!aAtom.pos && !bAtom.pos){
+      aAtom.pos = {x: STAGE_W/2 + (Math.random()-0.5)*20, y: STAGE_H/2 + (Math.random()-0.5)*20};
+      seedPosition(bId, aId);
+    } else if(aAtom.pos && !bAtom.pos){
+      seedPosition(bId, aId);
+    } else if(!aAtom.pos && bAtom.pos){
+      seedPosition(aId, bId);
+    }
     cState.bonds.push({id: cNextBondId++, aId, bId, order:1});
-    setCFeedback("neutral","Single bond formed — free. Use + below if the atoms still need more shared pairs.");
+    setCFeedback("neutral","Single bond formed — free. Click the bond line if it still needs more shared pairs.");
+    runRelax();
   }
 
   function removeAtomC(atomId){
     cState.workspace = cState.workspace.filter(a=>a.id!==atomId);
     cState.bonds = cState.bonds.filter(b=> b.aId!==atomId && b.bId!==atomId);
     if(cState.armedId===atomId) cState.armedId=null;
-    renderCovalent();
+    cState.openBondId = null;
+    runRelax();
   }
 
   function removeBond(bondId){
