@@ -306,6 +306,13 @@
      they're settling. Suppress it for the stage only; .leaving keeps its own animation since
      :not(.leaving) excludes it from this rule entirely. */
   #c-stage .atom:not(.leaving){ animation:none; }
+  /* .atom's hover/selected rules assume a self-contained button (tray/palette) that can shift
+     in place. A stage <g>'s bond <line>s, remove-✕ button and armed ring are separate SVG
+     siblings at fixed coordinates, not part of the <g> — nudging just the <g> would visibly
+     detach its circle+label from its own bond line and controls. Neither state is meant to
+     move stage atoms, so neutralize both here. */
+  #c-stage .atom:hover{ transform:none; }
+  #c-stage .atom.selected{ transform:none; box-shadow:none; }
 
   @media (prefers-reduced-motion: reduce){
     .atom, .cell, button.btn, .chamber-shell.flash-success{animation:none !important;transition:none !important;}
