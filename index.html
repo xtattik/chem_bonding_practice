@@ -299,6 +299,22 @@
   .cell .charge{font-family:"IBM Plex Mono",monospace;font-size:7px;position:absolute;bottom:2px;right:3px;opacity:.9;}
   .palette-caption{margin:10px 2px 0;font-size:11.5px;color:var(--muted);max-width:60ch;}
 
+  .ion-row{display:flex;flex-wrap:wrap;gap:4px;}
+  .ion-tile{
+    position:relative;
+    min-width:40px;height:36px;padding:0 8px;
+    border:none;border-radius:5px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-family:"IBM Plex Sans", sans-serif;
+    box-shadow:var(--shadow);
+    transition:transform .1s ease, opacity .1s ease;
+  }
+  .ion-tile:hover:not(:disabled){transform:translateY(-2px);}
+  .ion-tile:disabled{opacity:.35;cursor:not-allowed;}
+  .ion-tile .sym{font-weight:700;font-size:11px;line-height:1;}
+  .ion-tile .charge{font-family:"IBM Plex Mono",monospace;font-size:8px;margin-top:1px;opacity:.9;}
+
   #c-stage circle, #c-stage text, #c-stage g { transform-box: fill-box; transform-origin: center; }
   /* .atom's base rule includes an unconditional "pop" entrance animation, meant for tray
      buttons that render once. The stage redraws every atom on every relax tick, which would
@@ -378,6 +394,14 @@
         <div class="palette" id="palette"></div>
       </div>
       <p class="palette-caption" id="palette-caption"></p>
+    </div>
+
+    <div class="palette-section" id="ion-section" hidden>
+      <div class="palette-head">
+        <p class="chamber-label" style="margin:0;">Variable-charge metals &amp; common ions</p>
+      </div>
+      <div class="ion-row" id="ion-row"></div>
+      <p class="palette-caption">Each tile's own charge is shown on the tile — these don't follow the periodic table's simple group-charge pattern.</p>
     </div>
 
   </section>
@@ -477,6 +501,38 @@
     Ca: {name:"Calcium",    z:20, period:4, group:2,  charge:2,    bg:"#3F8455", fg:"#EAF5EC"},
   };
   const ORDER = ["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca"];
+
+  /* Transition metals with more than one commonly-taught oxidation state.
+     Each gets its own tile (own key, own charge) but shares its real chemical
+     symbol with its sibling states, so formula matching (which counts by
+     symbol) treats "Cu" the same regardless of which charge-tile spawned it —
+     exactly like real chemistry. minLevel is a 0-based index into LEVELS
+     (declared further below): minLevel:1 means "first appears at LEVELS[1]",
+     i.e. the level humans will see labelled "Level 2". */
+  const TRANSITION_METALS = {
+    Cu1: {symbol:"Cu", name:"Copper(I)",   charge:1, minLevel:1, bg:"#E8956B", fg:"#3A1B0A"},
+    Cu2: {symbol:"Cu", name:"Copper(II)",  charge:2, minLevel:1, bg:"#C97442", fg:"#2A1206"},
+    Fe2: {symbol:"Fe", name:"Iron(II)",    charge:2, minLevel:1, bg:"#B0B4B8", fg:"#22262A"},
+    Fe3: {symbol:"Fe", name:"Iron(III)",   charge:3, minLevel:1, bg:"#888D92", fg:"#1A1D20"},
+    Pb2: {symbol:"Pb", name:"Lead(II)",    charge:2, minLevel:1, bg:"#8B92A6", fg:"#1C202A"},
+    Pb4: {symbol:"Pb", name:"Lead(IV)",    charge:4, minLevel:1, bg:"#666D80", fg:"#F0F2F5"},
+    Sn2: {symbol:"Sn", name:"Tin(II)",     charge:2, minLevel:1, bg:"#D6D9DC", fg:"#282B2E"},
+    Sn4: {symbol:"Sn", name:"Tin(IV)",     charge:4, minLevel:1, bg:"#AEB2B6", fg:"#1E2022"},
+  };
+
+  /* Polyatomic ions behave as a single charged particle for ionic bonding
+     purposes — a new "fake element" with its own symbol/charge and no
+     period/group position, rendered in the ion strip rather than on the
+     periodic-table grid. */
+  const POLYATOMIC_IONS = {
+    OH:     {symbol:"OH",     name:"Hydroxide", charge:-1, minLevel:2, bg:"#8FD9C4", fg:"#0A2E24"},
+    NO3:    {symbol:"NO3",    name:"Nitrate",   charge:-1, minLevel:2, bg:"#F2C572", fg:"#3A2703"},
+    NH4:    {symbol:"NH4",    name:"Ammonium",  charge:1,  minLevel:2, bg:"#9FB8E8", fg:"#0D1E3A"},
+    SO4:    {symbol:"SO4",    name:"Sulfate",   charge:-2, minLevel:3, bg:"#E8A0C0", fg:"#3A0F22"},
+    CO3:    {symbol:"CO3",    name:"Carbonate", charge:-2, minLevel:3, bg:"#B8A8E0", fg:"#241A3A"},
+    PO4:    {symbol:"PO4",    name:"Phosphate", charge:-3, minLevel:3, bg:"#F0967D", fg:"#3A1409"},
+    CH3COO: {symbol:"CH3COO", name:"Acetate",   charge:-1, minLevel:3, bg:"#C4D96A", fg:"#242E08"},
+  };
 
   const CHALLENGES = [
     {name:"Sodium Chloride",    formula:"NaCl",  elements:{Na:1, Cl:1}},
