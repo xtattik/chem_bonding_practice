@@ -705,13 +705,6 @@
       setFeedback("error", nonIonic.name + " doesn't form a simple ion — it can't take part in an ionic bond.");
       return;
     }
-    const chargesBySymbol = {};
-    atoms.forEach(a=>{ (chargesBySymbol[a.symbol] = chargesBySymbol[a.symbol] || new Set()).add(a.charge); });
-    const mixedSymbol = Object.keys(chargesBySymbol).find(sym => chargesBySymbol[sym].size > 1);
-    if(mixedSymbol){
-      setFeedback("error", "You've selected " + mixedSymbol + " atoms with different charges — pick a single charge state and use only that one.");
-      return;
-    }
     const counts = {};
     atoms.forEach(a=> counts[a.symbol] = (counts[a.symbol]||0) + 1);
     const symbols = Object.keys(counts);
@@ -721,6 +714,13 @@
     }
     if(symbols.length > 2){
       setFeedback("error","Select atoms of exactly two elements — one cation, one anion.");
+      return;
+    }
+    const chargesBySymbol = {};
+    atoms.forEach(a=>{ (chargesBySymbol[a.symbol] = chargesBySymbol[a.symbol] || new Set()).add(a.charge); });
+    const mixedSymbol = Object.keys(chargesBySymbol).find(sym => chargesBySymbol[sym].size > 1);
+    if(mixedSymbol){
+      setFeedback("error", "You've selected " + mixedSymbol + " atoms with different charges — pick a single charge state and use only that one.");
       return;
     }
     const netCharge = atoms.reduce((sum,a)=> sum + a.charge, 0);
